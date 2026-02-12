@@ -3,146 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Perfect Invitation</title>
+    <title>Wedding Invitation</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --gold: #d4af37;
             --maroon: #800000;
+            --gold: #d4af37;
+            --cream: #fffaf0;
         }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; font-family: 'Segoe UI', serif;
-            background-color: #fffaf0;
+        
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'Georgia', serif; background: var(--cream);
+            scroll-snap-type: y mandatory; overflow-y: scroll; scroll-behavior: smooth;
         }
 
-        /* --- CURTAIN SECTION --- */
-        .curtain-wrapper {
+        /* --- WAVY CURTAIN ANIMATION --- */
+        .curtain-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; pointer-events: none; display: flex;
+            z-index: 1000; display: flex; pointer-events: none;
         }
         .curtain {
             width: 50%; height: 100%; background: var(--maroon);
-            background-image: repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 21px);
-            transition: transform 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0px, transparent 15px, rgba(255,255,255,0.1) 30px);
+            transition: transform 2.5s cubic-bezier(0.45, 0.05, 0.55, 0.95);
         }
-        .left { transform-origin: left; border-right: 2px solid var(--gold); }
-        .right { transform-origin: right; border-left: 2px solid var(--gold); }
-        
-        /* Opening state */
-        .opened .left { transform: translateX(-100%); }
-        .opened .right { transform: translateX(100%); }
+        /* Wavy/Swing effect using keyframes */
+        .opened .left-curtain { animation: waveLeft 2.5s forwards; }
+        .opened .right-curtain { animation: waveRight 2.5s forwards; }
 
-        /* --- CONTENT SECTION --- */
-        .content {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 100vh; text-align: center;
+        @keyframes waveLeft {
+            0% { transform: translateX(0) skewY(0deg); }
+            20% { transform: translateX(-10%) skewY(2deg); }
+            100% { transform: translateX(-105%) skewY(0deg); }
         }
-        .names { font-size: 2.5rem; color: var(--maroon); margin-bottom: 20px; }
-        
-        /* --- SCRATCH AREA --- */
-        .scratch-box {
-            position: relative; width: 300px; height: 150px;
-            user-select: none; -webkit-user-select: none;
+        @keyframes waveRight {
+            0% { transform: translateX(0) skewY(0deg); }
+            20% { transform: translateX(10%) skewY(-2deg); }
+            100% { transform: translateX(105%) skewY(0deg); }
         }
-        #reveal-text {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; background: #fff; border: 2px dashed var(--gold);
-            z-index: 1; border-radius: 10px;
+
+        /* --- PAGE STYLING --- */
+        section {
+            height: 100vh; width: 100%; scroll-snap-align: start;
+            position: relative; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
+            text-align: center;
         }
-        #scratch-canvas {
-            position: absolute; top: 0; left: 0; z-index: 2;
-            cursor: crosshair; touch-action: none; border-radius: 10px;
+
+        /* PAGE 1: BACKGROUND IMAGE & ROMANCE */
+        .page1 {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('couple.jpg');
+            background-size: cover; background-position: center; color: white;
         }
-        .instructions { margin-top: 15px; font-style: italic; color: #555; }
+        .romantic-text { font-style: italic; font-size: 1.1rem; margin: 20px; max-width: 80%; }
+
+        /* PAGE 2: TRIPLE SCRATCH */
+        .scratch-container { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .scratch-box { position: relative; width: 100px; height: 100px; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 2; border-radius: 50%; }
+        .hidden-val { 
+            position: absolute; top:0; left:0; width:100px; height:100px;
+            background: white; border: 2px solid var(--gold); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: var(--maroon); z-index: 1;
+        }
+
+        /* PAGE 3: VENUE */
+        .venue-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .map-btn { 
+            display: inline-block; margin-top: 15px; padding: 10px 20px;
+            background: var(--maroon); color: white; text-decoration: none; border-radius: 5px;
+        }
+
+        /* PAGE 4: COUNTDOWN & FINAL */
+        #countdown { font-size: 1.5rem; color: var(--maroon); margin: 20px 0; font-weight: bold; }
+        .final-img { width: 250px; height: 250px; object-fit: cover; border-radius: 50%; border: 5px solid var(--gold); }
     </style>
 </head>
-<body onclick="openCurtains()">
+<body onclick="document.body.classList.add('opened')">
 
-    <div class="curtain-wrapper" id="curtainWrapper">
-        <div class="curtain left"></div>
-        <div class="curtain right"></div>
+    <div class="curtain-container">
+        <div class="curtain left-curtain"></div>
+        <div class="curtain right-curtain"></div>
     </div>
 
-    <div class="content">
-        <div class="names">Sam & Sofia</div>
-        <p>Are getting married!</p>
-        
-        <div class="scratch-box">
-            <div id="reveal-text">
-                <h2 style="margin:0; color:var(--maroon);">SEPTEMBER 10</h2>
-                <h3 style="margin:0; color:var(--gold);">2027</h3>
+    <section class="page1">
+        <h1 style="font-size: 3rem; margin: 0;">Ram & Rishika</h1>
+        <p class="romantic-text">"Two souls, one heart. A journey beginning with a promise to stay together forever."</p>
+        <p>Scroll down to reveal the secret...</p>
+    </section>
+
+    <section>
+        <h2 style="color: var(--maroon);">Scratch the circles!</h2>
+        <div class="scratch-container">
+            <div class="scratch-box">
+                <div class="hidden-val">24</div>
+                <canvas id="c1" width="100" height="100"></canvas>
             </div>
-            <canvas id="scratch-canvas" width="300" height="150"></canvas>
+            <div class="scratch-box">
+                <div class="hidden-val">NOV</div>
+                <canvas id="c2" width="100" height="100"></canvas>
+            </div>
+            <div class="scratch-box">
+                <div class="hidden-val">2026</div>
+                <canvas id="c3" width="100" height="100"></canvas>
+            </div>
         </div>
-        
-        <p class="instructions">Tap to open curtains & scratch to reveal the date</p>
-    </div>
+    </section>
+
+    <section>
+        <div class="venue-card">
+            <h2 style="color: var(--maroon);">The Venue</h2>
+            <p><strong>Grand Palace Grounds</strong><br>Bengaluru, Karnataka</p>
+            <a href="https://www.google.com/maps/dir//Raj+Convention+Hall,+Gorantla,+Andhra+Pradesh+515231/@12.8892884,77.6192442,2721m/data=!3m1!1e3!4m8!4m7!1m0!1m5!1m1!1s0x3bb183197ebdd251:0xea177547b76a815d!2m2!1d77.7985717!2d13.9729443?entry=ttu&g_ep=EgoyMDI2MDIwOS4wIKXMDSoASAFQAw%3D%3D" class="map-btn" target="_blank">View on Google Maps</a>
+        </div>
+    </section>
+
+    <section>
+        <div id="countdown">Loading Countdown...</div>
+        <p><strong>Muhurtam:</strong> 03:00 AM <br> <strong>Reception:</strong> 6:00 PM onwards</p>
+        <h1 style="color: var(--maroon); font-size: 2.5rem;">YOU ALL ARE WELCOME</h1>
+        <img src="welcome.jpg" class="final-img" alt="The Couple">
+    </section>
 
     <script>
-        // 1. Curtain Logic
-        function openCurtains() {
-            document.body.classList.add('opened');
-        }
+        // --- MULTI-SCRATCH LOGIC ---
+        function initScratch(id) {
+            const canvas = document.getElementById(id);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#D4AF37';
+            ctx.fillRect(0, 0, 100, 100);
 
-        // 2. Scratch Logic
-        const canvas = document.getElementById('scratch-canvas');
-        const ctx = canvas.getContext('2d');
-        let scratchedAmount = 0;
-        const totalPixels = canvas.width * canvas.height;
-
-        // Fill canvas with gold texture
-        ctx.fillStyle = '#C0C0C0'; // Silver/Gold cover
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#D4AF37'; 
-        for(let i=0; i<100; i++) { // Simple texture
-            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
-        }
-
-        function scratch(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-            
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath();
-            ctx.arc(x, y, 25, 0, Math.PI * 2);
-            ctx.fill();
-            
-            checkScratchPercentage();
-        }
-
-        function checkScratchPercentage() {
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let clearPixels = 0;
-            for (let i = 3; i < imageData.data.length; i += 4) {
-                if (imageData.data[i] === 0) clearPixels++;
+            function scratch(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
             }
-            
-            // If 40% is scratched, reveal all and fire confetti
-            if (clearPixels / totalPixels > 0.4) {
-                canvas.style.transition = 'opacity 1s';
-                canvas.style.opacity = '0';
-                setTimeout(() => {
-                    canvas.remove();
-                    fireConfetti();
-                }, 500);
-            }
+            canvas.addEventListener('mousemove', scratch);
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); scratch(e); });
         }
+        ['c1', 'c2', 'c3'].forEach(initScratch);
 
-        function fireConfetti() {
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#D4AF37', '#800000', '#ffffff']
-            });
-        }
-
-        canvas.addEventListener('mousemove', scratch);
-        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); scratch(e); }, {passive: false});
+        // --- COUNTDOWN LOGIC ---
+        const weddingDate = new Date("Feb 27, 2026 03:00:00").getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const diff = weddingDate - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            document.getElementById("countdown").innerHTML = `${days}d ${hours}h left until the big day!`;
+        }, 1000);
     </script>
 </body>
 </html>
