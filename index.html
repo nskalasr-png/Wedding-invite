@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Perfect Invitation</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --maroon: #800000;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Segoe UI', serif;
+            background-color: #fffaf0;
+        }
+
+        /* --- CURTAIN SECTION --- */
+        .curtain-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; pointer-events: none; display: flex;
+        }
+        .curtain {
+            width: 50%; height: 100%; background: var(--maroon);
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 21px);
+            transition: transform 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        }
+        .left { transform-origin: left; border-right: 2px solid var(--gold); }
+        .right { transform-origin: right; border-left: 2px solid var(--gold); }
+        
+        /* Opening state */
+        .opened .left { transform: translateX(-100%); }
+        .opened .right { transform: translateX(100%); }
+
+        /* --- CONTENT SECTION --- */
+        .content {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100vh; text-align: center;
+        }
+        .names { font-size: 2.5rem; color: var(--maroon); margin-bottom: 20px; }
+        
+        /* --- SCRATCH AREA --- */
+        .scratch-box {
+            position: relative; width: 300px; height: 150px;
+            user-select: none; -webkit-user-select: none;
+        }
+        #reveal-text {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; background: #fff; border: 2px dashed var(--gold);
+            z-index: 1; border-radius: 10px;
+        }
+        #scratch-canvas {
+            position: absolute; top: 0; left: 0; z-index: 2;
+            cursor: crosshair; touch-action: none; border-radius: 10px;
+        }
+        .instructions { margin-top: 15px; font-style: italic; color: #555; }
+    </style>
+</head>
+<body onclick="openCurtains()">
+
+    <div class="curtain-wrapper" id="curtainWrapper">
+        <div class="curtain left"></div>
+        <div class="curtain right"></div>
+    </div>
+
+    <div class="content">
+        <div class="names">Sam & Sofia</div>
+        <p>Are getting married!</p>
+        
+        <div class="scratch-box">
+            <div id="reveal-text">
+                <h2 style="margin:0; color:var(--maroon);">SEPTEMBER 10</h2>
+                <h3 style="margin:0; color:var(--gold);">2027</h3>
+            </div>
+            <canvas id="scratch-canvas" width="300" height="150"></canvas>
+        </div>
+        
+        <p class="instructions">Tap to open curtains & scratch to reveal the date</p>
+    </div>
+
+    <script>
+        // 1. Curtain Logic
+        function openCurtains() {
+            document.body.classList.add('opened');
+        }
+
+        // 2. Scratch Logic
+        const canvas = document.getElementById('scratch-canvas');
+        const ctx = canvas.getContext('2d');
+        let scratchedAmount = 0;
+        const totalPixels = canvas.width * canvas.height;
+
+        // Fill canvas with gold texture
+        ctx.fillStyle = '#C0C0C0'; // Silver/Gold cover
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#D4AF37'; 
+        for(let i=0; i<100; i++) { // Simple texture
+            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+        }
+
+        function scratch(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            checkScratchPercentage();
+        }
+
+        function checkScratchPercentage() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let clearPixels = 0;
+            for (let i = 3; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] === 0) clearPixels++;
+            }
+            
+            // If 40% is scratched, reveal all and fire confetti
+            if (clearPixels / totalPixels > 0.4) {
+                canvas.style.transition = 'opacity 1s';
+                canvas.style.opacity = '0';
+                setTimeout(() => {
+                    canvas.remove();
+                    fireConfetti();
+                }, 500);
+            }
+        }
+
+        function fireConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#D4AF37', '#800000', '#ffffff']
+            });
+        }
+
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); scratch(e); }, {passive: false});
+    </script>
+</body>
+</html>
